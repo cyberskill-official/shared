@@ -30,7 +30,7 @@ jobs:
 
       - name: Env & Deps
         # keep @main, do not change
-        uses: cyberskill-official/.github/actions/env-deps@a914c67463fc842d7e5314d81e11f6bded0e3211 # main
+        uses: cyberskill-official/.github/actions/env-deps@main # main
         with:
           NODE_VERSION: ${{ matrix.NODE_VERSION }}
 
@@ -52,7 +52,7 @@ jobs:
 
       - name: Lint
         # keep @main, do not change
-        uses: cyberskill-official/.github/actions/lint@a914c67463fc842d7e5314d81e11f6bded0e3211 # main
+        uses: cyberskill-official/.github/actions/lint@main # main
 
       - name: Build
         run: pnpm build

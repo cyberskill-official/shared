@@ -23,11 +23,11 @@ jobs:
 
       - name: Env & Deps
         # keep @main, do not change
-        uses: cyberskill-official/.github/actions/env-deps@a914c67463fc842d7e5314d81e11f6bded0e3211 # main
+        uses: cyberskill-official/.github/actions/env-deps@main # main
 
       - name: Build
         # keep @main, do not change
-        uses: cyberskill-official/.github/actions/build@a914c67463fc842d7e5314d81e11f6bded0e3211 # main
+        uses: cyberskill-official/.github/actions/build@main # main
 
       - name: Generate SBOM
         run: npx -y @cyclonedx/cdxgen@12.1.5 -o bom.json  # pinned — bump explicitly
