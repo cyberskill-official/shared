@@ -1,0 +1,365 @@
+{
+    "name": "@cyberskill/shared",
+    "type": "module",
+    "version": "3.19.0",
+    "description": "CyberSkill Shared",
+    "author": "Stephen Cheng",
+    "license": "MIT",
+    "homepage": "https://github.com/cyberskill-official/shared#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/cyberskill-official/shared.git"
+    },
+    "bugs": {
+        "url": "https://github.com/cyberskill-official/shared/issues"
+    },
+    "sideEffects": [
+        "./dist/style.css"
+    ],
+    "imports": {
+        "#public/*": "./public/*",
+        "#config/*": "./src/config/*",
+        "#constant/*": "./src/constant/*",
+        "#node/*": "./src/node/*",
+        "#react/*": "./src/react/*",
+        "#style/*": "./src/style/*",
+        "#typescript/*": "./src/typescript/*",
+        "#util/*": "./src/util/*"
+    },
+    "exports": {
+        "./config": {
+            "types": "./dist/config/index.d.ts",
+            "import": "./dist/config/index.js",
+            "default": "./dist/config/index.js"
+        },
+        "./config/commitlint": {
+            "types": "./dist/config/commitlint/index.d.ts",
+            "import": "./dist/config/commitlint/index.js",
+            "default": "./dist/config/commitlint/index.js"
+        },
+        "./config/env": {
+            "types": "./dist/config/env/index.d.ts",
+            "import": "./dist/config/env/index.js",
+            "default": "./dist/config/env/index.js"
+        },
+        "./config/eslint": {
+            "types": "./dist/config/eslint/index.d.ts",
+            "import": "./dist/config/eslint/index.js",
+            "default": "./dist/config/eslint/index.js"
+        },
+        "./config/graphql-codegen": {
+            "types": "./dist/config/graphql-codegen/index.d.ts",
+            "import": "./dist/config/graphql-codegen/index.js",
+            "default": "./dist/config/graphql-codegen/index.js"
+        },
+        "./config/lint-staged": {
+            "types": "./dist/config/lint-staged/index.d.ts",
+            "import": "./dist/config/lint-staged/index.js",
+            "default": "./dist/config/lint-staged/index.js"
+        },
+        "./config/vitest": {
+            "types": "./dist/config/vitest/index.d.ts",
+            "import": "./dist/config/vitest/index.js",
+            "default": "./dist/config/vitest/index.js"
+        },
+        "./config/storybook": {
+            "types": "./dist/config/storybook/index.d.ts",
+            "import": "./dist/config/storybook/index.js",
+            "default": "./dist/config/storybook/index.js"
+        },
+        "./constant": {
+            "types": "./dist/constant/index.d.ts",
+            "import": "./dist/constant/index.js",
+            "default": "./dist/constant/index.js"
+        },
+        "./node/apollo-server": {
+            "types": "./dist/node/apollo-server/index.d.ts",
+            "import": "./dist/node/apollo-server/index.js",
+            "default": "./dist/node/apollo-server/index.js"
+        },
+        "./node/cli": {
+            "types": "./dist/node/cli/index.d.ts",
+            "import": "./dist/node/cli/index.js",
+            "default": "./dist/node/cli/index.js"
+        },
+        "./node/command": {
+            "types": "./dist/node/command/index.d.ts",
+            "import": "./dist/node/command/index.js",
+            "default": "./dist/node/command/index.js"
+        },
+        "./node/express": {
+            "types": "./dist/node/express/index.d.ts",
+            "import": "./dist/node/express/index.js",
+            "default": "./dist/node/express/index.js"
+        },
+        "./node/fs": {
+            "types": "./dist/node/fs/index.d.ts",
+            "import": "./dist/node/fs/index.js",
+            "default": "./dist/node/fs/index.js"
+        },
+        "./node/log": {
+            "types": "./dist/node/log/index.d.ts",
+            "import": "./dist/node/log/index.js",
+            "default": "./dist/node/log/index.js"
+        },
+        "./node/mongo": {
+            "types": "./dist/node/mongo/index.d.ts",
+            "import": "./dist/node/mongo/index.js",
+            "default": "./dist/node/mongo/index.js"
+        },
+        "./node/mongo/types": {
+            "types": "./dist/node/mongo/index.d.ts"
+        },
+        "./node/package": {
+            "types": "./dist/node/package/index.d.ts",
+            "import": "./dist/node/package/index.js",
+            "default": "./dist/node/package/index.js"
+        },
+        "./node/path": {
+            "types": "./dist/node/path/index.d.ts",
+            "import": "./dist/node/path/index.js",
+            "default": "./dist/node/path/index.js"
+        },
+        "./node/storage": {
+            "types": "./dist/node/storage/index.d.ts",
+            "import": "./dist/node/storage/index.js",
+            "default": "./dist/node/storage/index.js"
+        },
+        "./node/upload": {
+            "types": "./dist/node/upload/index.d.ts",
+            "import": "./dist/node/upload/index.js",
+            "default": "./dist/node/upload/index.js"
+        },
+        "./node/ws": {
+            "types": "./dist/node/ws/index.d.ts",
+            "import": "./dist/node/ws/index.js",
+            "default": "./dist/node/ws/index.js"
+        },
+        "./react/apollo-client": {
+            "types": "./dist/react/apollo-client/index.d.ts",
+            "import": "./dist/react/apollo-client/index.js",
+            "default": "./dist/react/apollo-client/index.js"
+        },
+        "./react/apollo-client-nextjs": {
+            "types": "./dist/react/apollo-client-nextjs/index.d.ts",
+            "import": "./dist/react/apollo-client-nextjs/index.js",
+            "default": "./dist/react/apollo-client-nextjs/index.js"
+        },
+        "./react/apollo-client-nextjs/rsc": {
+            "types": "./dist/react/apollo-client-nextjs/apollo-client-nextjs.rsc.d.ts",
+            "import": "./dist/react/apollo-client-nextjs/apollo-client-nextjs.rsc.js",
+            "default": "./dist/react/apollo-client-nextjs/apollo-client-nextjs.rsc.js"
+        },
+        "./react/apollo-error": {
+            "types": "./dist/react/apollo-error/index.d.ts",
+            "import": "./dist/react/apollo-error/index.js",
+            "default": "./dist/react/apollo-error/index.js"
+        },
+        "./react/i18next": {
+            "types": "./dist/react/i18next/index.d.ts",
+            "import": "./dist/react/i18next/index.js",
+            "default": "./dist/react/i18next/index.js"
+        },
+        "./react/i18next/server": {
+            "types": "./dist/react/i18next/i18next.server.d.ts",
+            "import": "./dist/react/i18next/i18next.server.js",
+            "default": "./dist/react/i18next/i18next.server.js"
+        },
+        "./react/loading": {
+            "types": "./dist/react/loading/index.d.ts",
+            "import": "./dist/react/loading/index.js",
+            "default": "./dist/react/loading/index.js"
+        },
+        "./react/log": {
+            "types": "./dist/react/log/index.d.ts",
+            "import": "./dist/react/log/index.js",
+            "default": "./dist/react/log/index.js"
+        },
+        "./react/next-intl": {
+            "types": "./dist/react/next-intl/index.d.ts",
+            "import": "./dist/react/next-intl/index.js",
+            "default": "./dist/react/next-intl/index.js"
+        },
+        "./react/next-intl/server": {
+            "types": "./dist/react/next-intl/next-intl.server.d.ts",
+            "import": "./dist/react/next-intl/next-intl.server.js",
+            "default": "./dist/react/next-intl/next-intl.server.js"
+        },
+        "./react/storage": {
+            "types": "./dist/react/storage/index.d.ts",
+            "import": "./dist/react/storage/index.js",
+            "default": "./dist/react/storage/index.js"
+        },
+        "./react/toast": {
+            "types": "./dist/react/toast/index.d.ts",
+            "import": "./dist/react/toast/index.js",
+            "default": "./dist/react/toast/index.js"
+        },
+        "./react/userback": {
+            "types": "./dist/react/userback/index.d.ts",
+            "import": "./dist/react/userback/index.js",
+            "default": "./dist/react/userback/index.js"
+        },
+        "./typescript": {
+            "types": "./dist/typescript/index.d.ts",
+            "import": "./dist/typescript/index.js",
+            "default": "./dist/typescript/index.js"
+        },
+        "./types": {
+            "types": "./dist/typescript/index.d.ts"
+        },
+        "./util": {
+            "types": "./dist/util/index.d.ts",
+            "import": "./dist/util/index.js",
+            "default": "./dist/util/index.js"
+        },
+        "./style.css": {
+            "import": "./dist/style.css",
+            "default": "./dist/style.css"
+        }
+    },
+    "bin": {
+        "cyberskill": "dist/node/cli/index.js"
+    },
+    "files": [
+        "dist",
+        "public"
+    ],
+    "engines": {
+        "node": ">=24.0.0"
+    },
+    "scripts": {
+        "ai:setup": "tsx src/node/cli/index.ts ai:setup",
+        "build": "tsx src/node/cli/index.ts build",
+        "commitlint": "tsx src/node/cli/index.ts commitlint",
+        "dev": "vite build --watch",
+        "inspect": "tsx src/node/cli/index.ts inspect",
+        "lint": "tsx src/node/cli/index.ts lint",
+        "lint:fix": "tsx src/node/cli/index.ts lint:fix",
+        "lint:inspect": "tsx src/node/cli/index.ts lint:inspect",
+        "ready": "tsx src/node/cli/index.ts ready",
+        "reset": "tsx src/node/cli/index.ts reset",
+        "test": "run-s test:unit test:e2e",
+        "test:e2e": "tsx src/node/cli/index.ts test:e2e",
+        "test:unit": "tsx src/node/cli/index.ts test:unit",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@antfu/eslint-config": "8.2.0",
+        "@apollo/client": "4.1.9",
+        "@apollo/client-integration-nextjs": "0.14.5",
+        "@apollo/server": "5.5.0",
+        "@as-integrations/express5": "1.1.2",
+        "@dotenvx/dotenvx": "1.63.0",
+        "@eddeee888/gcg-typescript-resolver-files": "0.15.1",
+        "@eslint-react/eslint-plugin": "3.0.0",
+        "@graphql-codegen/cli": "6.3.1",
+        "@graphql-codegen/client-preset": "5.3.0",
+        "@nestjs/common": "11.1.19",
+        "@nestjs/core": "11.1.19",
+        "@userback/widget": "0.3.12",
+        "@vitejs/plugin-react": "6.0.1",
+        "body-parser": "2.2.2",
+        "chalk": "5.6.2",
+        "clsx": "2.1.1",
+        "compression": "1.8.1",
+        "consola": "3.4.2",
+        "cookie-parser": "1.4.7",
+        "cors": "2.8.6",
+        "date-fns": "4.1.0",
+        "envalid": "8.1.1",
+        "eslint-config-next": "16.2.4",
+        "eslint-plugin-format": "2.0.1",
+        "eslint-plugin-react-hooks": "7.1.1",
+        "eslint-plugin-react-refresh": "0.5.2",
+        "express": "5.2.1",
+        "express-rate-limit": "8.4.1",
+        "express-session": "1.19.0",
+        "express-useragent": "2.1.0",
+        "extract-files": "13.0.0",
+        "fs-extra": "11.3.4",
+        "globals": "17.5.0",
+        "graphql": "16.13.2",
+        "graphql-upload": "17.0.0",
+        "graphql-ws": "6.0.8",
+        "helmet": "8.1.0",
+        "i18next": "26.0.8",
+        "migrate-mongo": "14.0.7",
+        "mongodb": "7.2.0",
+        "mongoose": "9.5.0",
+        "mongoose-aggregate-paginate-v2": "1.1.4",
+        "mongoose-paginate-v2": "1.9.4",
+        "next-intl": "4.9.1",
+        "path-to-regexp": "8.4.2",
+        "qs": "6.15.1",
+        "react": "19.2.5",
+        "react-dom": "19.2.5",
+        "react-hot-toast": "2.6.0",
+        "react-i18next": "17.0.4",
+        "rxjs": "7.8.2",
+        "ws": "8.20.0",
+        "yargs": "18.0.0"
+    },
+    "devDependencies": {
+        "@commitlint/cli": "20.5.2",
+        "@commitlint/config-conventional": "20.5.0",
+        "@eslint/config-inspector": "2.0.0",
+        "@next/eslint-plugin-next": "16.2.4",
+        "@semantic-release/changelog": "6.0.3",
+        "@semantic-release/git": "10.0.1",
+        "@semantic-release/github": "12.0.6",
+        "@storybook/react": "10.3.5",
+        "@storybook/react-vite": "10.3.5",
+        "@testing-library/dom": "10.4.1",
+        "@testing-library/jest-dom": "6.9.1",
+        "@testing-library/react": "16.3.2",
+        "@types/body-parser": "1.19.6",
+        "@types/compression": "1.8.1",
+        "@types/cookie-parser": "1.4.10",
+        "@types/cors": "2.8.19",
+        "@types/express": "5.0.6",
+        "@types/express-session": "1.19.0",
+        "@types/express-useragent": "1.0.5",
+        "@types/extract-files": "13.0.2",
+        "@types/fs-extra": "11.0.4",
+        "@types/graphql-upload": "17.0.0",
+        "@types/migrate-mongo": "10.0.6",
+        "@types/node": "25.6.0",
+        "@types/react": "19.2.14",
+        "@types/react-dom": "19.2.3",
+        "@types/ws": "8.18.1",
+        "@types/yargs": "17.0.35",
+        "@vitest/browser": "4.1.5",
+        "@vitest/coverage-istanbul": "4.1.5",
+        "conventional-changelog-conventionalcommits": "9.3.1",
+        "eslint": "10.2.1",
+        "glob": "13.0.6",
+        "jsdom": "29.0.2",
+        "license-checker": "25.0.1",
+        "lint-staged": "16.4.0",
+        "node-modules-inspector": "1.4.2",
+        "npm-run-all2": "8.0.4",
+        "sass": "1.99.0",
+        "semantic-release": "25.0.3",
+        "simple-git-hooks": "2.13.1",
+        "tsx": "4.21.0",
+        "typescript": "6.0.3",
+        "vite": "8.0.10",
+        "vite-plugin-dts": "4.5.4",
+        "vitest": "4.1.5"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true,
+        "registry": "https://registry.npmjs.org/"
+    },
+    "pnpm": {
+        "overrides": {
+            "lodash": ">=4.18.0",
+            "lodash-es": ">=4.18.0",
+            "minimatch": ">=10.2.5",
+            "next": "16.2.3",
+            "path-to-regexp": "8.4.2"
+        }
+    }
+}

@@ -1,0 +1,70 @@
+---
+name: 🧪 CI - Check
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+permissions: {}
+jobs:
+  check:
+    name: 🧪 Check (Node ${{ matrix.NODE_VERSION }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: contains(github.event.head_commit.message, 'from cyberskill-official/release') == false
+    strategy:
+      fail-fast: false
+      matrix:
+        NODE_VERSION: [24.14.0]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Env & Deps
+        # keep @main, do not change
+        uses: cyberskill-official/.github/actions/env-deps@a914c67463fc842d7e5314d81e11f6bded0e3211 # main
+        with:
+          NODE_VERSION: ${{ matrix.NODE_VERSION }}
+
+      - name: Build Cache
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
+        with:
+          path: |
+            dist
+            node_modules/.cache
+          key: ${{ runner.os }}-build-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
+      - name: Security Audit
+        run: pnpm audit --audit-level=moderate --ignore-registry-errors
+
+      - name: License Compliance
+        run: pnpm exec license-checker --summary --failOn "GPL;AGPL;LGPL;SSPL"
+
+      - name: Lint
+        # keep @main, do not change
+        uses: cyberskill-official/.github/actions/lint@a914c67463fc842d7e5314d81e11f6bded0e3211 # main
+
+      - name: Build
+        run: pnpm build
+
+      - name: Validate Exports
+        run: npx tsx scripts/validate-exports.ts
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test with Coverage
+        run: pnpm test:unit -- --coverage
+
+      - name: Test E2E
+        run: pnpm test:e2e

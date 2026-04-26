@@ -1,0 +1,40 @@
+{
+    "extends": "./public/tsconfig.base.json",
+    "compilerOptions": {
+        "ignoreDeprecations": "6.0",
+        "baseUrl": ".",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "paths": {
+            "#public/*": [
+                "./public/*"
+            ],
+            "#config/*": [
+                "./src/config/*"
+            ],
+            "#constant/*": [
+                "./src/constant/*"
+            ],
+            "#node/*": [
+                "./src/node/*"
+            ],
+            "#react/*": [
+                "./src/react/*"
+            ],
+            "#style/*": [
+                "./src/style/*"
+            ],
+            "#typescript/*": [
+                "./src/typescript/*"
+            ],
+            "#util/*": [
+                "./src/util/*"
+            ]
+        },
+        "noEmit": true
+    },
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.tsx"
+    ]
+}

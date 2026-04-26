@@ -1,0 +1,20 @@
+# Default owners for everything
+* @cyberskill-official/maintainers
+
+# CI/CD workflows
+.github/ @cyberskill-official/maintainers
+
+# Root configuration files
+/*.json @cyberskill-official/maintainers
+/*.ts @cyberskill-official/maintainers
+/*.js @cyberskill-official/maintainers
+/*.md @cyberskill-official/maintainers
+
+# Source code — as the team scales, consider splitting by domain:
+# /src/react/    @cyberskill-official/frontend
+# /src/node/     @cyberskill-official/backend
+/src/ @cyberskill-official/maintainers
+
+# Scripts and documentation
+/scripts/ @cyberskill-official/maintainers
+/docs/ @cyberskill-official/maintainers
