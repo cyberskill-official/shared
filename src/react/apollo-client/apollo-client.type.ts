@@ -10,6 +10,10 @@ export interface I_ApolloOptions extends Omit<ApolloClient.Options, 'link' | 'ca
     customLinks?: ApolloLink[];
     /** Enable round-trip timing logs for every GraphQL operation. Defaults to false. */
     debug?: boolean;
+    /** Optional HTTP headers to include in every GraphQL request (e.g. Origin, Authorization). */
+    headers?: Record<string, string>;
+    /** Optional credentials option for the upload link (e.g. 'include', 'omit', 'same-origin'). Defaults to 'include'. */
+    credentials?: RequestCredentials;
 }
 
 export interface I_ApolloProviderProps extends I_Children {

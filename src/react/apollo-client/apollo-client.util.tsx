@@ -111,7 +111,7 @@ const errorLink = new ErrorLink(({ error, operation }) => {
  * @returns An array of Apollo Links configured for the specified options.
  */
 export function createApolloLinks(options: I_ApolloOptions): ApolloLink[] {
-    const { uri, wsUrl, customLinks, debug } = options;
+    const { uri, wsUrl, customLinks, debug, headers, credentials } = options;
 
     const removeTypenameLink = new RemoveTypenameFromVariablesLink();
 
@@ -121,9 +121,10 @@ export function createApolloLinks(options: I_ApolloOptions): ApolloLink[] {
 
     const uploadLink = createUploadLink({
         uri: uri ?? GRAPHQL_URI_DEFAULT,
-        credentials: 'include',
+        credentials: credentials ?? 'include',
         headers: {
             'apollo-require-preflight': 'true',
+            ...headers,
         },
     });
 
@@ -163,9 +164,11 @@ export function createApolloLinks(options: I_ApolloOptions): ApolloLink[] {
 export function getClient(options: I_ApolloOptions) {
     const link = ApolloLink.from(createApolloLinks(options));
 
+    const { uri, wsUrl, customLinks, debug, headers: _headers, credentials, ...restOptions } = options;
+
     return new ApolloClient({
         link,
         cache: new InMemoryCache(),
-        ...options,
+        ...restOptions,
     });
 }

@@ -261,7 +261,8 @@ async function executeCommand(command: string | void, parser = parseCommandOutpu
             }
             else {
                 const parts = command.split(RE_WHITESPACE).filter(Boolean);
-                result = await execFilePromise(parts[0]!, parts.slice(1), execOptions);
+                const isWin = process.platform === 'win32';
+                result = await execFilePromise(parts[0]!, parts.slice(1), { ...execOptions, shell: isWin });
             }
 
             await Promise.all([result.stdout, result.stderr].map(output => output && parser(output)));

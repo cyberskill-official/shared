@@ -76,13 +76,14 @@ const entryPoints = glob.sync(['src/**/index.{ts,tsx}', 'src/**/*.rsc.ts', 'src/
     ignore: ['src/**/*.type.ts', 'src/**/*.d.ts', 'src/**/*.test.*.ts', 'src/**/*.test.*.tsx'],
     absolute: true,
 }).reduce<Record<string, string>>((entries, file) => {
-    const entryName = file.replace(RE_SRC_PREFIX, '').replace(RE_TS_EXT, '');
+    const normalizedFile = file.replace(/\\/g, '/');
+    const entryName = normalizedFile.replace(RE_SRC_PREFIX, '').replace(RE_TS_EXT, '');
 
-    if (process.env.FILTER && !file.includes(process.env.FILTER)) {
+    if (process.env.FILTER && !normalizedFile.includes(process.env.FILTER)) {
         return entries;
     }
 
-    entries[entryName] = file;
+    entries[entryName] = normalizedFile;
 
     return entries;
 }, {});
