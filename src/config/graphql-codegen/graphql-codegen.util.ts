@@ -50,7 +50,7 @@ export function createGraphqlCodegenConfig({
                 [to]: {
                     preset: 'client',
                     presetConfig: {
-                        fragmentMasking: true,
+                        fragmentMasking: false,
                         persistedDocuments: true,
                     },
                     config: {
