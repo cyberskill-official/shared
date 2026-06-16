@@ -291,10 +291,10 @@ async function executeCommand(command: string | void, parser = parseCommandOutpu
 /**
  * Creates a raw command object that bypasses CLI formatting.
  * This function wraps a command string in an object that indicates it should be executed
- * as-is without any additional CLI formatting or path resolution.
+ * as-is without any additional CLI formatting or path resolution. Do not use it to execute
+ * user-provided strings — use the CLI formatting pipeline instead.
  *
  * @internal
- * to execute user-provided strings — use the CLI formatting pipeline instead.
  *
  * @security All ASCII control characters (0x00–0x1F, 0x7F) are rejected to prevent
  * command injection via newline splitting, null-byte truncation, or escape-sequence
