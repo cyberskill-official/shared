@@ -1,6 +1,7 @@
 import type { UserConfig } from 'vite';
 
 import react from '@vitejs/plugin-react';
+import { join } from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 import { deepMerge } from '#util/object/index.js';
@@ -31,7 +32,7 @@ export function vitestUnit(options: UserConfig) {
             environment: 'jsdom',
             pool: 'forks',
             include: ['**/*.test.unit.?(c|m)[jt]s?(x)'],
-            setupFiles: [`${import.meta.dirname}/vitest.unit.setup.js`],
+            setupFiles: [join(import.meta.dirname, 'vitest.unit.setup.js')],
             coverage: {
                 provider: 'istanbul',
                 reporter: ['text', 'lcov'],
