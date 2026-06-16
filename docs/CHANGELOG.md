@@ -1,3 +1,30 @@
+## 1.0.0 (2026-06-16)
+
+### ✨ Features
+
+* init project ([b351cd7](https://github.com/cyberskill-official/shared/commit/b351cd73b5d5ce12132b254c4af6fe731f47f5c6))
+* point workflow to main ([03feedc](https://github.com/cyberskill-official/shared/commit/03feedc85957a8f9bdcf00d6ce68601f42e09b5b))
+* remove codeql ([bc1b544](https://github.com/cyberskill-official/shared/commit/bc1b5445c602c3382c30346607d27501a9e908b5))
+* update libs ([944d25b](https://github.com/cyberskill-official/shared/commit/944d25bb2dba3f4bb2aeccbcfaa4a56af9b1f571))
+
+### 🐛 Bug Fixes
+
+* allow credentials to call api ssr ([7dc7652](https://github.com/cyberskill-official/shared/commit/7dc76520c82a2f984c6430776c912fc3eae9584d))
+* lint clean (path.join in vitest config) + refresh awh baseline ([155801c](https://github.com/cyberskill-official/shared/commit/155801cd64dcf119c8190716d0a5bdcfcebdd4ea))
+* lint, security audit (next/esbuild), graphql-codegen test ([bc7b5b4](https://github.com/cyberskill-official/shared/commit/bc7b5b40e1ffadf973d7383210777a7e002559bb))
+* type ([b64c4a7](https://github.com/cyberskill-official/shared/commit/b64c4a71c7119cf40ba1f6559a8100c40e06d020))
+* **yamllint:** indent languages seq + strip trailing space in .serena/project.yml ([2865413](https://github.com/cyberskill-official/shared/commit/2865413576024352a88c9f30bc1bc444868e6f19))
+
+### 🔧 CI
+
+* add yamllint config; make .awh/goldenset.yaml yamllint-clean ([94010fb](https://github.com/cyberskill-official/shared/commit/94010fb74a6f58f56e37824bdec70a5bff7897a7))
+* add yamllint config; make .awh/goldenset.yaml yamllint-clean ([9c96707](https://github.com/cyberskill-official/shared/commit/9c96707a1a32b7e20225c2c0e10199672ee0e9b1))
+
+### 🧹 Chores
+
+* fix pnpm install (mirror+timeouts) + adopt auto-work-harness Stage 0/1 ([fedaeba](https://github.com/cyberskill-official/shared/commit/fedaeba1335e621e592dfb5c5ae9c7cced3f2c8b))
+* resolve npm vulnerabilities in uuid and postcss ([4f7427a](https://github.com/cyberskill-official/shared/commit/4f7427a2bb6eb4e5066f29874d2786c2cf74e02d))
+
 ### Fixed
 - **deploy.yml:** [CI] Add `--ignore-registry-errors` to `pnpm audit` in deploy workflow, consistent with `check.yml`. Prevents transient npm registry issues from blocking production deployments. (AUDIT-1776270477-5) (@Agent)
 
