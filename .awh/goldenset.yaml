@@ -1,7 +1,8 @@
+---
 # @cyberskill/shared golden set for the Stage-1 regression gate.
-# Deterministic checks -> 1 seed is enough. Each task has a timeout so a hung
-# command is bounded, not forever. Generate the baseline ON A MAC with deps installed
-# (Linux CI/sandbox can't run the darwin-native toolchain):
+# Deterministic checks -> 1 seed is enough. Each task has a timeout, so a
+# hung command is bounded. Generate the baseline ON A MAC (deps installed;
+# the Linux CI/sandbox can't run the darwin-native toolchain):
 #   awh eval .awh/goldenset.yaml --seeds 1 --out .awh/eval-baseline.json
 tasks:
   - id: lint

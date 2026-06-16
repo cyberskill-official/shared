@@ -1,0 +1,23 @@
+---
+# yamllint config for @cyberskill/shared.
+# Rationale: auto-generated configs (.serena), pnpm-workspace.yaml, and GitHub
+# workflows legitimately use long lines and omit the `---` start; treat those as
+# non-fatal while keeping real structural checks (indentation, key duplicates,
+# syntax). Adjust to taste.
+extends: default
+
+ignore: |
+  node_modules/
+  dist/
+  coverage/
+  .serena/
+
+rules:
+  line-length:
+    max: 120
+    level: warning
+  document-start: disable
+  truthy:
+    check-keys: false
+  comments:
+    min-spaces-from-content: 1
