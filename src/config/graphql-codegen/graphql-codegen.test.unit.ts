@@ -48,7 +48,7 @@ describe('createGraphqlCodegenConfig', () => {
             const generates = config.generates[baseOptions.to] as any;
 
             expect(generates.preset).toBe('client');
-            expect(generates.presetConfig.fragmentMasking).toBe(true);
+            expect(generates.presetConfig.fragmentMasking).toBe(false);
             expect(generates.presetConfig.persistedDocuments).toBe(true);
         });
 
