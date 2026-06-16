@@ -1,0 +1,23 @@
+# @cyberskill/shared golden set for the Stage-1 regression gate.
+# Deterministic checks -> 1 seed is enough. Each task has a timeout so a hung
+# command is bounded, not forever. Generate the baseline ON A MAC with deps installed
+# (Linux CI/sandbox can't run the darwin-native toolchain):
+#   awh eval .awh/goldenset.yaml --seeds 1 --out .awh/eval-baseline.json
+tasks:
+  - id: lint
+    description: cyberskill lint reports no issues
+    cmd: "pnpm lint"
+    weight: 1.0
+    timeout_sec: 240
+
+  - id: typecheck
+    description: TypeScript type-checks with no errors (tsc --noEmit)
+    cmd: "pnpm typecheck"
+    weight: 1.0
+    timeout_sec: 240
+
+  - id: unit
+    description: unit tests pass (test:unit)
+    cmd: "pnpm test:unit"
+    weight: 3.0
+    timeout_sec: 300
