@@ -1,3 +1,27 @@
+## [3.21.0](https://github.com/cyberskill-official/shared/compare/v3.20.1...v3.21.0) (2026-06-16)
+
+### ✨ Features
+
+* update libs ([4082f50](https://github.com/cyberskill-official/shared/commit/4082f501b12424fd88e401043a2b5c8f801dd126))
+* update libs ([944d25b](https://github.com/cyberskill-official/shared/commit/944d25bb2dba3f4bb2aeccbcfaa4a56af9b1f571))
+
+### 🐛 Bug Fixes
+
+* lint clean (path.join in vitest config) + refresh awh baseline ([155801c](https://github.com/cyberskill-official/shared/commit/155801cd64dcf119c8190716d0a5bdcfcebdd4ea))
+* lint, security audit (next/esbuild), graphql-codegen test ([bc7b5b4](https://github.com/cyberskill-official/shared/commit/bc7b5b40e1ffadf973d7383210777a7e002559bb))
+* **yamllint:** indent languages seq + strip trailing space in .serena/project.yml ([2865413](https://github.com/cyberskill-official/shared/commit/2865413576024352a88c9f30bc1bc444868e6f19))
+
+### 🔧 CI
+
+* add yamllint config; make .awh/goldenset.yaml yamllint-clean ([94010fb](https://github.com/cyberskill-official/shared/commit/94010fb74a6f58f56e37824bdec70a5bff7897a7))
+* add yamllint config; make .awh/goldenset.yaml yamllint-clean ([9c96707](https://github.com/cyberskill-official/shared/commit/9c96707a1a32b7e20225c2c0e10199672ee0e9b1))
+* block semantic-release version downgrades (verifyRelease guard) ([2029e13](https://github.com/cyberskill-official/shared/commit/2029e132bf5b4041ece91fff7c93568e577f4889))
+
+### 🧹 Chores
+
+* fix pnpm install (mirror+timeouts) + adopt auto-work-harness Stage 0/1 ([fedaeba](https://github.com/cyberskill-official/shared/commit/fedaeba1335e621e592dfb5c5ae9c7cced3f2c8b))
+* **release:** 1.0.0 [skip ci] ([fabee08](https://github.com/cyberskill-official/shared/commit/fabee08e39adbb597cd0827130fa95e7100a92ad))
+
 ## 1.0.0 (2026-06-16)
 
 ### ✨ Features
