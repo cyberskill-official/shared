@@ -21,6 +21,11 @@ export default {
             preset: 'conventionalcommits',
             presetConfig: { types },
         }],
+        // Gate: abort the release if the computed version would publish backwards
+        // over npm's current `latest` (e.g. when git tags are missing). Runs in
+        // verifyRelease — before changelog/npm/git — so nothing is mutated or
+        // published on a blocked release.
+        './scripts/guard-no-downgrade.mjs',
         ['@semantic-release/changelog', {
             changelogFile: 'docs/CHANGELOG.md',
         }],
