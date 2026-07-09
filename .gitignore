@@ -7,3 +7,6 @@ node_modules
 .env.*
 !.env.example
 .simple-git-hooks.json
+
+# CyberOS vendored machine + local BRAIN at .cyberos/memory/store (regenerable via init; tenant data). Do not commit.
+.cyberos/
