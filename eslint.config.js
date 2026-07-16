@@ -7,6 +7,11 @@ export default mergeConfigs('eslint', {
         'public/favicon/manifest.json',
         // Status-hub static assets are hand-authored browser JS/CSS, not package source.
         'docs/status/**',
+        // Keep 2-space JSON packaging files; jsonc/indent in the base config expects 4.
+        'package.json',
+        '**/package.json',
+        'tsconfig*.json',
+        '.prettierrc*',
     ],
     rules: {
         'jsdoc/require-jsdoc': 'error',
