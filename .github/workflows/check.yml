@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        NODE_VERSION: [24.16.0]
+        NODE_VERSION: [24.18.0]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7  # v6.0.2
