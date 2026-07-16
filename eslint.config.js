@@ -3,7 +3,11 @@
 import { mergeConfigs } from './dist/config/index.js';
 
 export default mergeConfigs('eslint', {
-    ignores: ['public/favicon/manifest.json'],
+    ignores: [
+        'public/favicon/manifest.json',
+        // Status-hub static assets are hand-authored browser JS/CSS, not package source.
+        'docs/status/**',
+    ],
     rules: {
         'jsdoc/require-jsdoc': 'error',
     },
