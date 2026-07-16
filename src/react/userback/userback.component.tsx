@@ -7,7 +7,7 @@ import type { I_UserBackProps } from './userback.type.js';
  * Userback feedback widget component for collecting user feedback.
  * This component integrates the Userback feedback widget into React applications,
  * providing a customizable feedback collection interface for users to submit
- * bug reports, feature requests, and general feedback.
+ * bug reports, tasks, and general feedback.
  *
  * Features:
  * - Userback widget integration

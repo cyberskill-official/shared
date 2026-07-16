@@ -1,12 +1,12 @@
 ---
-name: Feature Request ✨
+name: Task ✨
 about: Suggest a shiny new feature or improvement
 title: "[FEATURE] - "
 labels: [feature]
 assignees:
 ---
 
-## Is your feature request related to a problem?
+## Is your task related to a problem?
 
 <!-- Please describe the problem you are trying to solve. Ex. I'm always frustrated when... -->
 
