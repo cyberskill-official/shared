@@ -148,6 +148,7 @@ export function createSession(options: SessionOptions): RequestHandler {
  * **Rate limit store:** The default `MemoryStore` is only suitable for single-process
  * deployments. For multi-process or clustered environments, configure a shared store
  * (e.g., `rate-limit-redis`, `rate-limit-mongo`) via `rateLimitOptions.store`.
+ * Use `passOnStoreError: true` to fail open when the store is unavailable.
  *
  * @param app - The Express application instance to configure with middleware.
  * @param isDev - Whether the application is running in development mode.
@@ -186,11 +187,14 @@ function setupMiddleware(
             rateLimit({
                 windowMs: rateLimitOptions.windowMs ?? 15 * 60 * 1000,
                 limit: rateLimitOptions.limit ?? 1000,
-                standardHeaders: true,
-                legacyHeaders: false,
+                standardHeaders: rateLimitOptions.standardHeaders ?? true,
+                legacyHeaders: rateLimitOptions.legacyHeaders ?? false,
                 ...(rateLimitOptions.store !== undefined && { store: rateLimitOptions.store }),
                 ...(rateLimitOptions.skip !== undefined && { skip: rateLimitOptions.skip }),
                 ...(rateLimitOptions.keyGenerator !== undefined && { keyGenerator: rateLimitOptions.keyGenerator }),
+                ...(rateLimitOptions.passOnStoreError !== undefined && { passOnStoreError: rateLimitOptions.passOnStoreError }),
+                ...(rateLimitOptions.skipSuccessfulRequests !== undefined && { skipSuccessfulRequests: rateLimitOptions.skipSuccessfulRequests }),
+                ...(rateLimitOptions.skipFailedRequests !== undefined && { skipFailedRequests: rateLimitOptions.skipFailedRequests }),
             }),
         );
     }

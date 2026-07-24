@@ -128,10 +128,14 @@ export const PATH = {
  * @returns A Git hooks configuration object with appropriate commands for each hook.
  */
 export function createGitHooksConfig() {
+    // Skip pull when no upstream (new local branch); --ff-only avoids surprise merges.
+    const prePushPull
+        = `if ${GIT_CLI} rev-parse --abbrev-ref @{u} >/dev/null 2>&1; then ${GIT_CLI} pull --ff-only || exit 1; fi`;
+
     return {
         'pre-commit': LINT_STAGED_CLI,
         'commit-msg': COMMIT_LINT_CLI,
-        'pre-push': rawCommand(`${GIT_CLI} pull && ${PNPM_CLI} run --if-present test`),
+        'pre-push': rawCommand(`${prePushPull} && ${PNPM_CLI} run --if-present test`),
     };
 }
 

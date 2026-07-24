@@ -13,6 +13,18 @@ export interface I_RateLimitOptions {
     store?: Store;
     skip?: (req: import('express').Request) => boolean | Promise<boolean>;
     keyGenerator?: (req: import('express').Request, res: import('express').Response) => string | Promise<string>;
+    /**
+     * When the backing store errors (e.g. Redis down), allow the request through
+     * instead of failing closed via the Express error handler. Defaults to `false`
+     * in express-rate-limit; set `true` for fail-open production behavior.
+     */
+    passOnStoreError?: boolean;
+    /** Override default `true` (IETF `RateLimit-*` headers). */
+    standardHeaders?: boolean | 'draft-6' | 'draft-7' | 'draft-8';
+    /** Override default `false` (legacy `X-RateLimit-*` headers). */
+    legacyHeaders?: boolean;
+    skipSuccessfulRequests?: boolean;
+    skipFailedRequests?: boolean;
 }
 
 export interface I_ExpressOptions {
