@@ -28,12 +28,14 @@ describe('path', () => {
 });
 
 describe('createGitHooksConfig', () => {
-    it('should include pre-push with git pull for current project', () => {
+    it('should include pre-push with upstream-guarded ff-only pull for current project', () => {
         const config = createGitHooksConfig();
         expect(config['pre-commit']).toBeDefined();
         expect(config['commit-msg']).toBeDefined();
         expect(config['pre-push']).toHaveProperty('cmd');
-        expect((config['pre-push'] as { cmd: string }).cmd).toContain('git pull');
+        const prePush = (config['pre-push'] as { cmd: string }).cmd;
+        expect(prePush).toContain('git rev-parse --abbrev-ref @{u}');
+        expect(prePush).toContain('git pull --ff-only');
     });
 
     it('should include pre-push with pnpm test', () => {
@@ -41,9 +43,10 @@ describe('createGitHooksConfig', () => {
         expect((config['pre-push'] as { cmd: string }).cmd).toContain('pnpm run --if-present test');
     });
 
-    it('should chain git pull and pnpm test with &&', () => {
+    it('should chain guarded pull and pnpm test with &&', () => {
         const config = createGitHooksConfig();
-        expect((config['pre-push'] as { cmd: string }).cmd).toContain('git pull && pnpm run --if-present test');
+        const prePush = (config['pre-push'] as { cmd: string }).cmd;
+        expect(prePush).toContain('git pull --ff-only || exit 1; fi && pnpm run --if-present test');
     });
 });
 

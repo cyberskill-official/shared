@@ -177,11 +177,25 @@ describe('createExpress rate limiting', () => {
                 limit: 50,
                 store: customStore,
                 skip: customSkip,
+                passOnStoreError: true,
+                standardHeaders: 'draft-7',
+                legacyHeaders: true,
+                skipSuccessfulRequests: true,
+                skipFailedRequests: false,
             },
         });
 
         expect(app).toBeDefined();
         rateLimitSpy.mockRestore();
+    });
+
+    it('should accept passOnStoreError in rateLimit options', () => {
+        const app = createExpress({
+            rateLimit: {
+                passOnStoreError: true,
+            },
+        });
+        expect(app).toBeDefined();
     });
 });
 
@@ -234,7 +248,14 @@ describe('createNest', () => {
     });
 
     it('should accept custom rate limit options', async () => {
-        const app = await createNest({ module: {} as any, rateLimit: { windowMs: 60_000, limit: 200 } });
+        const app = await createNest({
+            module: {} as any,
+            rateLimit: {
+                windowMs: 60_000,
+                limit: 200,
+                passOnStoreError: true,
+            },
+        });
         expect(app).toBeDefined();
     });
 
