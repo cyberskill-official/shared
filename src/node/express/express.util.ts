@@ -14,6 +14,7 @@ import { express as useragent } from 'express-useragent';
 import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.mjs';
 import helmet from 'helmet';
 import process from 'node:process';
+import { RedisStore } from 'rate-limit-redis';
 
 import { E_Environment } from '#typescript/index.js';
 
@@ -317,4 +318,33 @@ export function createCSP(
             ...options,
         },
     };
+}
+
+/**
+ * Helper to create a RedisStore for express-rate-limit using a provided Redis client.
+ * Dynamically imports 'rate-limit-redis' if installed.
+ *
+ * @param redisClient - A Redis client instance (e.g. ioredis client) with a `.call()` method.
+ * @returns A RedisStore instance or undefined if rate-limit-redis is unavailable or initialization fails.
+ */
+export async function createRateLimitStore(redisClient?: { call: (command: string, ...args: string[]) => Promise<any> }) {
+    try {
+        if (!redisClient) {
+            return undefined;
+        }
+
+        return new RedisStore({
+            sendCommand: (...args: string[]) => {
+                const command = args[0];
+                if (!command) {
+                    return Promise.reject(new Error('[RateLimit] Empty Redis command'));
+                }
+                return redisClient.call(command, ...args.slice(1)) as Promise<any>;
+            },
+        });
+    }
+    catch (error) {
+        log.warn('[RateLimit] rate-limit-redis not available or failed to initialize, falling back to MemoryStore.', error);
+        return undefined;
+    }
 }

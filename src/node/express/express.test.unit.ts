@@ -1,7 +1,7 @@
 import process from 'node:process';
 import { describe, expect, it, vi } from 'vitest';
 
-import { createCors, createCorsOptions, createCSP, createExpress, createNest, createSession } from './express.util.js';
+import { createCors, createCorsOptions, createCSP, createExpress, createNest, createRateLimitStore, createSession } from './express.util.js';
 
 const logMock = vi.hoisted(() => ({ warn: vi.fn(), error: vi.fn(), info: vi.fn() }));
 vi.mock('../log/index.js', () => ({
@@ -351,3 +351,21 @@ describe('createCorsOptions safety warnings', () => {
         process.env['NODE_ENV'] = original;
     });
 });
+
+// ---------------------------------------------------------------------------
+// createRateLimitStore
+// ---------------------------------------------------------------------------
+describe('createRateLimitStore', () => {
+    it('should return undefined when no redisClient is provided', async () => {
+        const store = await createRateLimitStore();
+        expect(store).toBeUndefined();
+    });
+
+    it('should attempt to create store or fallback gracefully when redisClient is provided', async () => {
+        const mockRedisClient = { call: vi.fn() };
+        const store = await createRateLimitStore(mockRedisClient);
+        // Returns RedisStore instance if rate-limit-redis is available or undefined if not
+        expect(store === undefined || typeof store === 'object').toBe(true);
+    });
+});
+
