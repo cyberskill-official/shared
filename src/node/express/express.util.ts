@@ -325,6 +325,7 @@ export function createCSP(
  * Dynamically imports 'rate-limit-redis' if installed.
  *
  * @param redisClient - A Redis client instance (e.g. ioredis client) with a `.call()` method.
+ * @param redisClient.call - Method to execute raw Redis commands.
  * @returns A RedisStore instance or undefined if rate-limit-redis is unavailable or initialization fails.
  */
 export async function createRateLimitStore(redisClient?: { call: (command: string, ...args: string[]) => Promise<any> }) {
