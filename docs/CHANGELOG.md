@@ -1,3 +1,14 @@
+## [3.23.0](https://github.com/cyberskill-official/shared/compare/v3.22.0...v3.23.0) (2026-07-29)
+
+### ✨ Features
+
+* add RedisStore support for rate limiting in Express ([48c9f61](https://github.com/cyberskill-official/shared/commit/48c9f614ba0c5e35390e9899272df0ccec9fbeac))
+
+### 🧹 Chores
+
+* add JSDoc comment for redisClient.call parameter in createRateLimitStore and remove trailing newline in test file ([230ac6b](https://github.com/cyberskill-official/shared/commit/230ac6b83c8609d71aa98cfbb407656254cfe946))
+* **cyberos:** upgrade to 1.12.0 - status v3 + traceability (TASK-DOCS-027) ([9d488b2](https://github.com/cyberskill-official/shared/commit/9d488b2162458603904e68f11d8fb034346ff303))
+
 ## [3.22.0](https://github.com/cyberskill-official/shared/compare/v3.21.0...v3.22.0) (2026-07-24)
 
 ### ✨ Features
