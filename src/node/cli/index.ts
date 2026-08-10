@@ -10,6 +10,7 @@ import { addGitIgnoreEntry, pathExistsSync, readFileSync, removeSync, writeFileS
 import { catchError, E_IssueType, log } from '../log/index.js';
 import { getPackage, installDependencies } from '../package/index.js';
 import { AG_KIT_PACKAGE_NAME, command, createGitHooksConfig, CYBERSKILL_CLI, CYBERSKILL_PACKAGE_NAME, DOT_AGENT, PATH, resolve, SIMPLE_GIT_HOOK_JSON } from '../path/index.js';
+import { checkMongoMigrateGuard } from './cli.util.js';
 
 /**
  * Retrieves the version from the package.json file.
@@ -344,9 +345,22 @@ async function mongoMigrateCreate(migrationName: string) {
  * This function runs all pending database migrations to update the database schema
  * to the latest version.
  *
+ * @remarks
+ * Refuses to run when {@link checkMongoMigrateGuard} reports migrations are disabled on this
+ * host (`MONGO_MIGRATE_DISABLED=true` without `FORCE_MIGRATIONS=true`) — prints an explanatory
+ * message and exits with a non-zero code instead of running the migration. This protects
+ * follower/read-replica origins in a geo-distributed deployment from ever applying migrations.
+ *
  * @returns A promise that resolves when all migrations are applied.
  */
 async function mongoMigrateUp() {
+    const guard = checkMongoMigrateGuard();
+
+    if (guard.blocked) {
+        log.error(guard.message);
+        process.exit(1);
+    }
+
     await runCommand('Running MongoDB migrations', await command.mongoMigrateUp());
 }
 
@@ -355,9 +369,22 @@ async function mongoMigrateUp() {
  * This function reverts the most recent database migration, undoing
  * the last schema change.
  *
+ * @remarks
+ * Refuses to run when {@link checkMongoMigrateGuard} reports migrations are disabled on this
+ * host (`MONGO_MIGRATE_DISABLED=true` without `FORCE_MIGRATIONS=true`) — prints an explanatory
+ * message and exits with a non-zero code instead of rolling back the migration. This protects
+ * follower/read-replica origins in a geo-distributed deployment from ever applying migrations.
+ *
  * @returns A promise that resolves when the migration is rolled back.
  */
 async function mongoMigrateDown() {
+    const guard = checkMongoMigrateGuard();
+
+    if (guard.blocked) {
+        log.error(guard.message);
+        process.exit(1);
+    }
+
     await runCommand('Rolling back MongoDB migration', await command.mongoMigrateDown());
 }
 
@@ -429,8 +456,8 @@ async function storybookBuild() {
 
                 await mongoMigrateCreate(argv.name);
             })
-            .command('mongo:migrate:up', 'Apply all MongoDB migrations', mongoMigrateUp)
-            .command('mongo:migrate:down', 'Rollback last MongoDB migration', mongoMigrateDown)
+            .command('mongo:migrate:up', 'Apply all MongoDB migrations (skipped if MONGO_MIGRATE_DISABLED=true, unless FORCE_MIGRATIONS=true)', mongoMigrateUp)
+            .command('mongo:migrate:down', 'Rollback last MongoDB migration (skipped if MONGO_MIGRATE_DISABLED=true, unless FORCE_MIGRATIONS=true)', mongoMigrateDown)
             .command('storybook:dev', 'Start Storybook development server', storybookDev)
             .command('storybook:build', 'Build Storybook for production', storybookBuild)
             .example('$0 lint:fix', 'Automatically block and fix linter errors')

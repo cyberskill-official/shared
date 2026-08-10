@@ -5,7 +5,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { addGitIgnoreEntry, writeFileSync } from '../fs/index.js';
-import { convertEnumToModelName, mongo } from './mongo.util.js';
+import { convertEnumToModelName, forcePrimaryReadPreference, mongo } from './mongo.util.js';
 
 const RE_LOWERCASE = /^[a-z]+$/;
 const RE_MIN_3_CHARS = /^.{3,}$/;
@@ -34,6 +34,73 @@ describe('convertEnumToModelName', () => {
 
     it('should handle single char', () => {
         expect(convertEnumToModelName('A')).toBe('A');
+    });
+});
+
+describe('forcePrimaryReadPreference', () => {
+    it('should append readPreference=primary when there is no query string', () => {
+        expect(forcePrimaryReadPreference('mongodb://localhost:27017/db'))
+            .toBe('mongodb://localhost:27017/db?readPreference=primary');
+    });
+
+    it('should support mongodb+srv:// URIs with no query string', () => {
+        expect(forcePrimaryReadPreference('mongodb+srv://cluster0.mongodb.net/db'))
+            .toBe('mongodb+srv://cluster0.mongodb.net/db?readPreference=primary');
+    });
+
+    it('should append readPreference=primary when the query string has no existing param', () => {
+        expect(forcePrimaryReadPreference('mongodb://localhost:27017/db?authSource=admin'))
+            .toBe('mongodb://localhost:27017/db?authSource=admin&readPreference=primary');
+    });
+
+    it('should replace an existing readPreference value of any kind', () => {
+        expect(forcePrimaryReadPreference('mongodb://localhost:27017/db?readPreference=secondaryPreferred'))
+            .toBe('mongodb://localhost:27017/db?readPreference=primary');
+    });
+
+    it('should replace readPreference in place without disturbing surrounding params', () => {
+        const result = forcePrimaryReadPreference(
+            'mongodb://localhost:27017/db?authSource=admin&readPreference=secondaryPreferred&replicaSet=rs0',
+        );
+
+        expect(result).toBe('mongodb://localhost:27017/db?authSource=admin&readPreference=primary&replicaSet=rs0');
+    });
+
+    it('should preserve a multi-host comma list untouched', () => {
+        const result = forcePrimaryReadPreference(
+            'mongodb://host1:27017,host2:27017,host3:27017/db?replicaSet=rs0&readPreference=secondaryPreferred',
+        );
+
+        expect(result).toBe('mongodb://host1:27017,host2:27017,host3:27017/db?replicaSet=rs0&readPreference=primary');
+    });
+
+    it('should preserve URI-encoded credentials untouched', () => {
+        const result = forcePrimaryReadPreference(
+            'mongodb://user%40domain:p%40ss%3Aword@host1:27017,host2:27017/db?readPreference=secondaryPreferred',
+        );
+
+        expect(result).toBe('mongodb://user%40domain:p%40ss%3Aword@host1:27017,host2:27017/db?readPreference=primary');
+    });
+
+    it('should collapse duplicate readPreference params into a single primary value', () => {
+        const result = forcePrimaryReadPreference(
+            'mongodb://localhost:27017/db?readPreference=secondary&readPreference=nearest',
+        );
+
+        expect(result).toBe('mongodb://localhost:27017/db?readPreference=primary');
+    });
+
+    it('should work with mongodb+srv:// multi-param query strings', () => {
+        const result = forcePrimaryReadPreference(
+            'mongodb+srv://user:pass@cluster0.mongodb.net/db?retryWrites=true&w=majority',
+        );
+
+        expect(result).toBe('mongodb+srv://user:pass@cluster0.mongodb.net/db?retryWrites=true&w=majority&readPreference=primary');
+    });
+
+    it('should handle an empty query string', () => {
+        expect(forcePrimaryReadPreference('mongodb://localhost:27017/db?'))
+            .toBe('mongodb://localhost:27017/db?readPreference=primary');
     });
 });
 
@@ -233,6 +300,55 @@ describe('mongo', () => {
             mongo.migrate.setConfig({ migrationsDir: 'migrations' } as any);
             expect(writeFileSync).toHaveBeenCalled();
             expect(addGitIgnoreEntry).toHaveBeenCalled();
+        });
+
+        it('should leave options untouched when there is no mongodb field at all', () => {
+            vi.mocked(writeFileSync).mockClear();
+            mongo.migrate.setConfig({ migrationsDir: 'migrations' } as any);
+
+            const written = vi.mocked(writeFileSync).mock.calls[0]?.[1] as string;
+            expect(written).not.toContain('readPreference');
+        });
+
+        it('should leave options untouched when mongodb has no url field', () => {
+            vi.mocked(writeFileSync).mockClear();
+            mongo.migrate.setConfig({ mongodb: { databaseName: 'test' } } as any);
+
+            const written = vi.mocked(writeFileSync).mock.calls[0]?.[1] as string;
+            expect(written).not.toContain('readPreference');
+            expect(written).toContain('"databaseName": "test"');
+        });
+
+        it('should force readPreference=primary on the mongodb.url before writing', () => {
+            vi.mocked(writeFileSync).mockClear();
+            mongo.migrate.setConfig({
+                mongodb: { url: 'mongodb://host1:27017,host2:27017/db?readPreference=secondaryPreferred' },
+            } as any);
+
+            const written = vi.mocked(writeFileSync).mock.calls[0]?.[1] as string;
+            expect(written).toContain('mongodb://host1:27017,host2:27017/db?readPreference=primary');
+            expect(written).not.toContain('secondaryPreferred');
+        });
+
+        it('should append readPreference=primary when the url has no query string', () => {
+            vi.mocked(writeFileSync).mockClear();
+            mongo.migrate.setConfig({ mongodb: { url: 'mongodb://localhost:27017/db' } } as any);
+
+            const written = vi.mocked(writeFileSync).mock.calls[0]?.[1] as string;
+            expect(written).toContain('mongodb://localhost:27017/db?readPreference=primary');
+        });
+
+        it('should preserve other mongodb config fields alongside the rewritten url', () => {
+            vi.mocked(writeFileSync).mockClear();
+            mongo.migrate.setConfig({
+                mongodb: { url: 'mongodb://localhost:27017/db', databaseName: 'myDb' },
+                changelogCollectionName: 'changelog',
+            } as any);
+
+            const written = vi.mocked(writeFileSync).mock.calls[0]?.[1] as string;
+            expect(written).toContain('"databaseName": "myDb"');
+            expect(written).toContain('"changelogCollectionName": "changelog"');
+            expect(written).toContain('readPreference=primary');
         });
     });
 
