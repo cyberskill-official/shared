@@ -1,3 +1,13 @@
+## [3.24.0](https://github.com/cyberskill-official/shared/compare/v3.23.0...v3.24.0) (2026-08-11)
+
+### ✨ Features
+
+* **mongo:** primary-forced migrate config and MONGO_MIGRATE_DISABLED guard ([c25deeb](https://github.com/cyberskill-official/shared/commit/c25deeb7195321260745408b97b235046e581fb8))
+
+### 🐛 Bug Fixes
+
+* **deps:** resolve release-blocking audit advisories ([6bc068e](https://github.com/cyberskill-official/shared/commit/6bc068e27f2d69b5d180b3341dee76716d51a97e))
+
 ## [3.23.0](https://github.com/cyberskill-official/shared/compare/v3.22.0...v3.23.0) (2026-07-29)
 
 ### ✨ Features
