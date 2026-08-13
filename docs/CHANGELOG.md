@@ -1,3 +1,10 @@
+## [3.24.1](https://github.com/cyberskill-official/shared/compare/v3.24.0...v3.24.1) (2026-08-13)
+
+### 🐛 Bug Fixes
+
+* prevent concurrent lint setup from blanking package versions ([b7ed199](https://github.com/cyberskill-official/shared/commit/b7ed199aa962a567b8f53d065b6549607d9ddd78))
+* sequence lint checks and install from preserved manifest versions ([1297c6c](https://github.com/cyberskill-official/shared/commit/1297c6ccaf96e0f89cf5df99a2d7aa12487a734e))
+
 ## [3.24.0](https://github.com/cyberskill-official/shared/compare/v3.23.0...v3.24.0) (2026-08-11)
 
 ### ✨ Features
