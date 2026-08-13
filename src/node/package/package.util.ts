@@ -12,21 +12,6 @@ import { E_PackageType } from './package.type.js';
 
 const env = getEnv();
 
-/** Serializes package.json mutations across concurrent setupPackages/updatePackage callers. */
-let packageJsonWriteChain: Promise<void> = Promise.resolve();
-
-/**
- * Runs a package.json mutation exclusively so concurrent callers cannot race writes.
- *
- * @param fn - The exclusive write callback to execute.
- * @returns The callback result.
- */
-function withPackageJsonWriteLock<T>(fn: () => Promise<T>): Promise<T> {
-    const run = packageJsonWriteChain.then(fn, fn);
-    packageJsonWriteChain = run.then(() => undefined, () => undefined);
-    return run;
-}
-
 /**
  * Returns whether a package version string is non-empty and usable for package.json writes.
  *
@@ -189,7 +174,7 @@ export async function getPackage(inputPackage?: I_PackageInput): Promise<I_Retur
                     // Never blank an installed/manifest version when registry lookup fails.
                     latestVersion: preservedVersion,
                     isCurrentProject: false,
-                    isInstalled: isInstalledOnDisk || isValidPackageVersion(packageJsonVersion),
+                    isInstalled: isInstalledOnDisk,
                     // Skip forced updates when we cannot resolve a newer registry version.
                     isUpToDate: true,
                     isDependency: resolvedIsDependency,
@@ -292,40 +277,38 @@ export async function getPackage(inputPackage?: I_PackageInput): Promise<I_Retur
  * @returns A promise that resolves when the update is complete.
  */
 export async function updatePackage(packageInfo: I_PackageInfo): Promise<void> {
-    return withPackageJsonWriteLock(async () => {
-        try {
-            if (!isValidPackageVersion(packageInfo.latestVersion)) {
-                log.warn(`Skipping update of "${packageInfo.name}": no valid latestVersion available`);
-                return;
-            }
-
-            const packageJson = readJsonSync(PATH.PACKAGE_JSON) as I_PackageJson;
-
-            const dependencies = packageJson.dependencies ?? {};
-            const devDependencies = packageJson.devDependencies ?? {};
-
-            if (packageInfo.isDependency) {
-                dependencies[packageInfo.name] = packageInfo.latestVersion;
-            }
-            else if (packageInfo.isDevDependency) {
-                devDependencies[packageInfo.name] = packageInfo.latestVersion;
-            }
-            else {
-                log.warn(`Skipping update of "${packageInfo.name}": package is neither a dependency nor a devDependency`);
-                return;
-            }
-
-            packageJson.dependencies = dependencies;
-            packageJson.devDependencies = devDependencies;
-
-            writeFileSync(PATH.PACKAGE_JSON, JSON.stringify(packageJson, null, 4));
-
-            log.info(`Updated "${packageInfo.name}" to version ${packageInfo.latestVersion}`);
+    try {
+        if (!isValidPackageVersion(packageInfo.latestVersion)) {
+            log.warn(`Skipping update of "${packageInfo.name}": no valid latestVersion available`);
+            return;
         }
-        catch (error: unknown) {
-            catchError(error);
+
+        const packageJson = readJsonSync(PATH.PACKAGE_JSON) as I_PackageJson;
+
+        const dependencies = packageJson.dependencies ?? {};
+        const devDependencies = packageJson.devDependencies ?? {};
+
+        if (packageInfo.isDependency) {
+            dependencies[packageInfo.name] = packageInfo.latestVersion;
         }
-    });
+        else if (packageInfo.isDevDependency) {
+            devDependencies[packageInfo.name] = packageInfo.latestVersion;
+        }
+        else {
+            log.warn(`Skipping update of "${packageInfo.name}": package is neither a dependency nor a devDependency`);
+            return;
+        }
+
+        packageJson.dependencies = dependencies;
+        packageJson.devDependencies = devDependencies;
+
+        writeFileSync(PATH.PACKAGE_JSON, JSON.stringify(packageJson, null, 4));
+
+        log.info(`Updated "${packageInfo.name}" to version ${packageInfo.latestVersion}`);
+    }
+    catch (error: unknown) {
+        catchError(error);
+    }
 }
 
 /**
@@ -433,7 +416,8 @@ export async function setupPackages(
                 await updatePackage(pkg);
             }
             await installDependencies();
-            await runCommand('Running ESLint with auto-fix', await command.eslintFix());
+            // Avoid recursive setupPackages via buildCommand's default install path.
+            await runCommand('Running ESLint with auto-fix', await command.eslintFix({ setup: false }));
         }
 
         await options?.callback?.();
