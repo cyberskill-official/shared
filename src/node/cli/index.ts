@@ -3,13 +3,12 @@ import process from 'node:process';
 import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs/yargs';
 
-import type { I_IssueEntry } from '../log/index.js';
-
-import { clearAllErrorLists, getStoredErrorLists, resolveCommands, runCommand } from '../command/index.js';
+import { clearAllErrorLists, resolveCommands, runCommand } from '../command/index.js';
 import { addGitIgnoreEntry, pathExistsSync, readFileSync, removeSync, writeFileSync } from '../fs/index.js';
-import { catchError, E_IssueType, log } from '../log/index.js';
+import { catchError, log } from '../log/index.js';
 import { getPackage, installDependencies } from '../package/index.js';
 import { AG_KIT_PACKAGE_NAME, command, createGitHooksConfig, CYBERSKILL_CLI, CYBERSKILL_PACKAGE_NAME, DOT_AGENT, PATH, resolve, SIMPLE_GIT_HOOK_JSON } from '../path/index.js';
+import { lintCheck, lintFix, showCheckResult } from './cli.lint.js';
 import { checkMongoMigrateGuard } from './cli.util.js';
 
 /**
@@ -29,96 +28,6 @@ function getVersion(): string {
     catch {
         /* Intentionally empty — fallback to default version when package.json is unreadable */
         return '1.0.0';
-    }
-}
-
-/**
- * Performs TypeScript validation if a TypeScript configuration file exists.
- * Uses `--incremental` mode to cache results — the first run may be slow
- * (especially with large generated files), but subsequent runs are near-instant.
- *
- * @returns A promise that resolves when the TypeScript validation is complete.
- */
-async function checkTypescript() {
-    if (!pathExistsSync(PATH.TS_CONFIG)) {
-        log.warn('No TypeScript configuration found. Skipping type check.');
-        return;
-    }
-
-    await runCommand('Performing TypeScript validation', await command.typescriptCheck());
-}
-
-/**
- * Performs ESLint checking with optional auto-fix functionality.
- * This function runs ESLint checks on the codebase and optionally applies
- * automatic fixes to resolve linting issues.
- *
- * @param fix - Whether to apply automatic fixes to linting issues (default: false).
- * @returns A promise that resolves when the ESLint check is complete.
- */
-async function checkEslint(fix = false) {
-    const commandToRun = fix ? await command.eslintFix() : await command.eslintCheck();
-    const label = fix ? 'Running ESLint with auto-fix' : 'Running ESLint check';
-
-    try {
-        await runCommand(label, commandToRun, { timeout: 60000, throwOnError: true });
-    }
-    catch (error: unknown) {
-        const errObj = error as { code?: string; killed?: boolean; signal?: string };
-        if (errObj.code === 'ETIMEDOUT' || errObj.killed || errObj.signal === 'SIGTERM') {
-            log.warn('Lint check timed out. Retrying with debug mode enabled...');
-            process.env['DEBUG'] = 'true';
-            await runCommand(`${label} (Debug Mode)`, commandToRun);
-        }
-        else {
-            catchError(error);
-        }
-    }
-}
-
-/**
- * Prints a formatted list of issues (errors or warnings) to the console.
- * This function displays issues in a boxed format with appropriate color coding
- * based on the issue type. It only displays issues if the list is not empty.
- *
- * @param type - The type of issues to display ('Errors' or 'Warnings').
- * @param list - An array of issue entries to display.
- */
-function printIssues(type: 'Errors' | 'Warnings', list: I_IssueEntry[]) {
-    if (!list.length) {
-        return;
-    }
-
-    const color = type === 'Errors' ? 'red' : 'yellow';
-    log.printBoxedLog(type === 'Errors' ? '✖ Errors' : '⚠ Warnings', list, color);
-}
-
-/**
- * Displays the final check results after all validation processes.
- * This function retrieves stored error lists and displays them in a formatted manner.
- * If no errors or warnings are found, it displays a success message. If errors are found,
- * it exits the process with code 1 to indicate failure.
- *
- * @returns A promise that resolves when the results are displayed.
- */
-async function showCheckResult() {
-    // Allow pending I/O (runCommand writes) to flush before reading results
-    await new Promise(resolve => setImmediate(resolve));
-
-    const allResults = (await getStoredErrorLists()) || [];
-    const errors = allResults.filter(e => e.type === E_IssueType.Error);
-    const warnings = allResults.filter(e => e.type === E_IssueType.Warning);
-
-    if (!errors.length && !warnings.length) {
-        log.printBoxedLog('✔ NO ISSUES FOUND', [], 'green');
-    }
-    else {
-        printIssues('Warnings', warnings);
-        printIssues('Errors', errors);
-
-        if (errors.length > 0) {
-            process.exit(1);
-        }
     }
 }
 
@@ -156,34 +65,6 @@ async function lintStaged() {
  */
 async function inspectLint() {
     await runCommand('Inspecting ESLint configuration', await command.eslintInspect());
-}
-
-/**
- * Performs comprehensive linting checks including TypeScript and ESLint.
- * This function runs both TypeScript validation and ESLint checks in parallel,
- * then displays the combined results.
- *
- * @returns A promise that resolves when all linting checks are complete.
- */
-async function lintCheck() {
-    await clearAllErrorLists();
-    await checkTypescript();
-    await checkEslint();
-    await showCheckResult();
-}
-
-/**
- * Performs comprehensive linting checks with automatic fixes.
- * This function runs both TypeScript validation and ESLint checks with auto-fix
- * in parallel, then displays the combined results.
- *
- * @returns A promise that resolves when all linting checks with fixes are complete.
- */
-async function lintFix() {
-    await clearAllErrorLists();
-    await checkTypescript();
-    await checkEslint(true);
-    await showCheckResult();
 }
 
 /**

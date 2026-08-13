@@ -139,9 +139,16 @@ export function createGitHooksConfig() {
     };
 }
 
+export interface I_CommandResolveOptions {
+    /**
+     * When false, skip setupPackages and return a read-only command string.
+     * Defaults to true for backward compatibility.
+     */
+    setup?: boolean;
+}
+
 /**
- * Builds a command function based on the specified type and configuration.
- * This function creates a command executor that handles different command types
+ * Builds a lazy command resolver that optionally installs required packages.
  * including CLI commands and string commands. It manages package dependencies
  * and formats commands appropriately for execution.
  *
@@ -150,6 +157,7 @@ export function createGitHooksConfig() {
  * - String commands that are executed directly
  * - Automatic package dependency management
  * - Command formatting and validation
+ * - Optional skip of package setup via `{ setup: false }`
  *
  * @param config - Configuration object containing type, packages, and command properties.
  * @param config.type - The type of command to build (CLI or STRING).
@@ -158,7 +166,7 @@ export function createGitHooksConfig() {
  * @returns A function that returns a promise resolving to the formatted command string.
  * @throws {Error} When an unsupported command type is provided.
  */
-function buildCommand({ type, packages, command }: { type: E_CommandType; packages?: I_PackageInput[]; command: string }): () => Promise<string> {
+function buildCommand({ type, packages, command }: { type: E_CommandType; packages?: I_PackageInput[]; command: string }): (options?: I_CommandResolveOptions) => Promise<string> {
     const uniquePackages = packages?.reduce((acc: I_PackageInput[], pkg) => {
         if (!acc.some(existingPkg => existingPkg.name === pkg.name)) {
             acc.push(pkg);
@@ -166,10 +174,12 @@ function buildCommand({ type, packages, command }: { type: E_CommandType; packag
         return acc;
     }, []);
 
-    return async () => {
+    return async (options?: I_CommandResolveOptions) => {
+        const shouldSetup = options?.setup !== false;
+
         switch (type) {
             case E_CommandType.CLI: {
-                if (uniquePackages?.length) {
+                if (shouldSetup && uniquePackages?.length) {
                     await setupPackages(uniquePackages, {
                         install: true,
                     });

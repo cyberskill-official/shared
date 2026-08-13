@@ -202,15 +202,86 @@ describe('getPackage', () => {
     });
 
     it('should handle failed latest version fetch', async () => {
-        vi.mocked(readJsonSync).mockReturnValueOnce({
-            name: 'test-project',
-            version: '1.0.0',
-            dependencies: { 'my-dep': '1.0.0' },
-            devDependencies: {},
+        vi.mocked(pathExistsSync).mockImplementation((pathStr: unknown) => {
+            const path = String(pathStr);
+            return path.includes('package.json');
+        });
+        vi.mocked(readJsonSync).mockImplementation((pathStr: unknown) => {
+            if (String(pathStr).includes('node_modules')) {
+                return { name: 'my-dep', version: '1.0.0' };
+            }
+            return {
+                name: 'test-project',
+                version: '1.0.0',
+                dependencies: { 'my-dep': '1.0.0' },
+                devDependencies: {},
+            };
         });
         vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network error')));
         const result = await getPackage({ name: 'my-dep' });
         expect(result.success).toBe(true);
+        if (result.success) {
+            expect(result.result.currentVersion).toBe('1.0.0');
+            expect(result.result.latestVersion).toBe('1.0.0');
+            expect(result.result.isInstalled).toBe(true);
+            expect(result.result.isUpToDate).toBe(true);
+        }
+    });
+
+    it('should preserve manifest version when registry fails and package is not on disk', async () => {
+        vi.mocked(pathExistsSync).mockImplementation((pathStr: unknown) => String(pathStr).includes('test-cwd/package.json'));
+        vi.mocked(readJsonSync).mockReturnValue({
+            name: 'test-project',
+            version: '1.0.0',
+            dependencies: {},
+            devDependencies: { eslint: '9.0.0' },
+        });
+        vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network error')));
+
+        const result = await getPackage({ name: 'eslint', type: E_PackageType.DEV_DEPENDENCY });
+        expect(result.success).toBe(true);
+        if (result.success) {
+            expect(result.result.latestVersion).toBe('9.0.0');
+            expect(result.result.currentVersion).toBe('9.0.0');
+            expect(result.result.isInstalled).toBe(false);
+            expect(result.result.isUpToDate).toBe(true);
+            expect(result.result.isDevDependency).toBe(true);
+        }
+    });
+
+    it('should install from preserved manifest version when registry fails and package is absent on disk', async () => {
+        let packageJson: Record<string, any> = {
+            name: 'consumer-app',
+            version: '1.0.0',
+            dependencies: {},
+            devDependencies: { eslint: '9.1.0' },
+        };
+
+        vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('registry down')));
+        vi.mocked(pathExistsSync).mockImplementation((pathStr: unknown) => String(pathStr).includes('test-cwd/package.json'));
+        vi.mocked(readJsonSync).mockImplementation(() => packageJson);
+
+        const { writeFileSync: wfs } = await import('../fs/index.js');
+        const { runCommand } = await import('../command/index.js');
+        vi.mocked(wfs).mockImplementation((_path: unknown, contents: unknown) => {
+            packageJson = JSON.parse(String(contents));
+        });
+
+        const pkg = await getPackage({ name: 'eslint', type: E_PackageType.DEV_DEPENDENCY });
+        expect(pkg.success).toBe(true);
+        if (pkg.success) {
+            expect(pkg.result.latestVersion).toBe('9.1.0');
+            expect(pkg.result.isInstalled).toBe(false);
+        }
+
+        await setupPackages([{ name: 'eslint', type: E_PackageType.DEV_DEPENDENCY }], { install: true });
+
+        expect(packageJson['devDependencies'].eslint).toBe('9.1.0');
+        expect(String(packageJson['devDependencies'].eslint).trim().length).toBeGreaterThan(0);
+        expect(runCommand).toHaveBeenCalledWith(
+            expect.stringContaining('Installing dependencies'),
+            expect.any(String),
+        );
     });
     it('should catch errors if internal logic throws', async () => {
         const { catchError } = await import('../log/index.js');
@@ -281,6 +352,27 @@ describe('updatePackage', () => {
         } as any);
 
         expect(catchError).toHaveBeenCalledWith(customError);
+    });
+
+    it('should skip writing when latestVersion is empty', async () => {
+        const { writeFileSync: wfs } = await import('../fs/index.js');
+        const { log } = await import('../log/index.js');
+
+        await updatePackage({
+            name: 'eslint',
+            latestVersion: '',
+            isDependency: false,
+            isDevDependency: true,
+            currentVersion: '9.0.0',
+            isCurrentProject: false,
+            isInstalled: true,
+            isUpToDate: false,
+            installedPath: '',
+            file: {},
+        } as any);
+
+        expect(wfs).not.toHaveBeenCalled();
+        expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('no valid latestVersion'));
     });
 });
 
@@ -390,5 +482,86 @@ describe('setupPackages', () => {
         await setupPackages([{ name: 'some-dep' }]);
 
         expect(catchError).toHaveBeenCalledWith(customError);
+    });
+
+    it('should keep installed lint tool versions when registry fails for on-disk packages', async () => {
+        let packageJson: Record<string, any> = {
+            name: 'consumer-app',
+            version: '1.0.0',
+            dependencies: {},
+            devDependencies: {
+                eslint: '9.1.0',
+                typescript: '5.4.0',
+            },
+        };
+
+        vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('registry down')));
+        vi.mocked(pathExistsSync).mockReturnValue(true);
+        vi.mocked(readJsonSync).mockImplementation((pathStr: unknown) => {
+            if (String(pathStr).includes('node_modules/eslint')) {
+                return { name: 'eslint', version: '9.1.0' };
+            }
+            if (String(pathStr).includes('node_modules/typescript')) {
+                return { name: 'typescript', version: '5.4.0' };
+            }
+            return packageJson;
+        });
+
+        const { writeFileSync: wfs } = await import('../fs/index.js');
+        vi.mocked(wfs).mockImplementation((_path: unknown, contents: unknown) => {
+            packageJson = JSON.parse(String(contents));
+        });
+
+        await setupPackages(
+            [
+                { name: 'eslint', type: E_PackageType.DEV_DEPENDENCY },
+                { name: 'typescript', type: E_PackageType.DEV_DEPENDENCY },
+            ],
+            { install: true },
+        );
+
+        expect(packageJson['devDependencies'].eslint).toBe('9.1.0');
+        expect(packageJson['devDependencies'].typescript).toBe('5.4.0');
+        expect(wfs).not.toHaveBeenCalled();
+    });
+
+    it('should write packages sequentially so later updates see earlier package.json changes', async () => {
+        const writeSnapshots: string[][] = [];
+        let packageJson: Record<string, any> = {
+            name: 'consumer-app',
+            version: '1.0.0',
+            dependencies: {},
+            devDependencies: {},
+        };
+
+        vi.mocked(pathExistsSync).mockImplementation((pathStr: unknown) => String(pathStr).includes('test-cwd/package.json'));
+        vi.mocked(readJsonSync).mockImplementation(() => structuredClone(packageJson));
+        vi.stubGlobal('fetch', vi.fn()
+            .mockResolvedValueOnce({ ok: true, json: async () => ({ version: '9.2.0' }) })
+            .mockResolvedValueOnce({ ok: true, json: async () => ({ version: '5.5.0' }) }));
+
+        const { writeFileSync: wfs } = await import('../fs/index.js');
+        vi.mocked(wfs).mockImplementation((_path: unknown, contents: unknown) => {
+            const parsed = JSON.parse(String(contents));
+            packageJson = parsed;
+            writeSnapshots.push(Object.keys(parsed.devDependencies ?? {}));
+        });
+
+        await setupPackages(
+            [
+                { name: 'eslint', type: E_PackageType.DEV_DEPENDENCY },
+                { name: 'typescript', type: E_PackageType.DEV_DEPENDENCY },
+            ],
+            { install: true },
+        );
+
+        // Sequential updates: first snapshot has only eslint; second has both.
+        // This fails if writes are fired concurrently from a shared stale read.
+        expect(writeSnapshots).toEqual([
+            ['eslint'],
+            ['eslint', 'typescript'],
+        ]);
+        expect(packageJson['devDependencies'].eslint).toBe('9.2.0');
+        expect(packageJson['devDependencies'].typescript).toBe('5.5.0');
     });
 });

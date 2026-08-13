@@ -13,6 +13,16 @@ import { E_PackageType } from './package.type.js';
 const env = getEnv();
 
 /**
+ * Returns whether a package version string is non-empty and usable for package.json writes.
+ *
+ * @param version - Candidate version string.
+ * @returns True when the version is a non-empty string.
+ */
+function isValidPackageVersion(version: string | undefined): version is string {
+    return typeof version === 'string' && version.trim().length > 0;
+}
+
+/**
  * Fetches the latest version of a package from the npm registry.
  * This function makes an HTTP request to the npm registry to get the latest version
  * information for a specified package.
@@ -137,22 +147,40 @@ export async function getPackage(inputPackage?: I_PackageInput): Promise<I_Retur
 
         const isDevDependency = inputPackage.name in devDependencies;
 
+        const packageJsonVersion = dependencies[inputPackage.name] ?? devDependencies[inputPackage.name] ?? '';
+        const dependencyPackageJsonPath = join(env.CWD, NODE_MODULES, inputPackage.name, PACKAGE_JSON);
+        const isInstalledOnDisk = pathExistsSync(dependencyPackageJsonPath);
+
         const latestVersionFound = await getLatestPackageVersion(inputPackage.name);
 
         if (!latestVersionFound.success) {
+            let currentVersion = packageJsonVersion;
+            let installedFile: I_PackageJson = {};
+
+            if (isInstalledOnDisk) {
+                installedFile = readJsonSync(dependencyPackageJsonPath) as I_PackageJson;
+                currentVersion = installedFile.version ?? packageJsonVersion;
+            }
+
+            const preservedVersion = isValidPackageVersion(currentVersion) ? currentVersion : '';
+            const resolvedIsDependency = isDependency || (!isDevDependency && inputPackage.type === E_PackageType.DEPENDENCY);
+            const resolvedIsDevDependency = isDevDependency || (!isDependency && inputPackage.type === E_PackageType.DEV_DEPENDENCY);
+
             return {
                 success: true,
                 result: {
                     name: inputPackage.name,
-                    currentVersion: '',
-                    latestVersion: '',
+                    currentVersion: preservedVersion,
+                    // Never blank an installed/manifest version when registry lookup fails.
+                    latestVersion: preservedVersion,
                     isCurrentProject: false,
-                    isInstalled: false,
-                    isUpToDate: false,
-                    isDependency,
-                    isDevDependency,
-                    installedPath: '',
-                    file: {},
+                    isInstalled: isInstalledOnDisk,
+                    // Skip forced updates when we cannot resolve a newer registry version.
+                    isUpToDate: true,
+                    isDependency: resolvedIsDependency,
+                    isDevDependency: resolvedIsDevDependency,
+                    installedPath: isInstalledOnDisk ? dependencyPackageJsonPath : '',
+                    file: installedFile,
                 },
             };
         }
@@ -176,11 +204,8 @@ export async function getPackage(inputPackage?: I_PackageInput): Promise<I_Retur
             };
         }
 
-        const packageJsonVersion = dependencies[inputPackage.name] ?? devDependencies[inputPackage.name] ?? '';
-        const dependencyPackageJsonPath = join(env.CWD, NODE_MODULES, inputPackage.name, PACKAGE_JSON);
-
         // if package does not exist in node_modules
-        if (!pathExistsSync(dependencyPackageJsonPath)) {
+        if (!isInstalledOnDisk) {
             return {
                 success: true,
                 result: {
@@ -253,6 +278,11 @@ export async function getPackage(inputPackage?: I_PackageInput): Promise<I_Retur
  */
 export async function updatePackage(packageInfo: I_PackageInfo): Promise<void> {
     try {
+        if (!isValidPackageVersion(packageInfo.latestVersion)) {
+            log.warn(`Skipping update of "${packageInfo.name}": no valid latestVersion available`);
+            return;
+        }
+
         const packageJson = readJsonSync(PATH.PACKAGE_JSON) as I_PackageJson;
 
         const dependencies = packageJson.dependencies ?? {};
@@ -264,6 +294,13 @@ export async function updatePackage(packageInfo: I_PackageInfo): Promise<void> {
         else if (packageInfo.isDevDependency) {
             devDependencies[packageInfo.name] = packageInfo.latestVersion;
         }
+        else {
+            log.warn(`Skipping update of "${packageInfo.name}": package is neither a dependency nor a devDependency`);
+            return;
+        }
+
+        packageJson.dependencies = dependencies;
+        packageJson.devDependencies = devDependencies;
 
         writeFileSync(PATH.PACKAGE_JSON, JSON.stringify(packageJson, null, 4));
 
@@ -329,6 +366,7 @@ export async function installDependencies(): Promise<void> {
  * @param options.install - Whether to install missing packages (default: false).
  * @param options.update - Whether to update outdated packages (default: false).
  * @param options.callback - Optional callback function to execute after package operations.
+ * Package.json writes are always serialized (never concurrent across packages).
  * @returns A promise that resolves when all package operations are complete.
  */
 export async function setupPackages(
@@ -351,23 +389,35 @@ export async function setupPackages(
             .filter((pkg): pkg is { success: true; result: I_PackageInfo } => pkg.success && Boolean(pkg.result) && !pkg.result.isCurrentProject)
             .map(pkg => pkg.result);
 
-        const packagesToInstall = validPackages.filter(pkg => !pkg.isInstalled);
-        const packagesToUpdate = validPackages.filter(pkg => !pkg.isUpToDate);
+        const packagesToInstall = validPackages.filter(
+            pkg => !pkg.isInstalled && isValidPackageVersion(pkg.latestVersion),
+        );
+        const packagesToUpdate = validPackages.filter(
+            pkg => !pkg.isUpToDate && isValidPackageVersion(pkg.latestVersion),
+        );
 
-        const tasks: Promise<void>[] = [];
+        // Serialize package.json writes — concurrent updatePackage races can blank versions.
+        const packagesToWrite: I_PackageInfo[] = [];
 
         if (options?.install && packagesToInstall.length > 0) {
-            tasks.push(...packagesToInstall.map(updatePackage));
+            packagesToWrite.push(...packagesToInstall);
         }
 
         if (options?.update && packagesToUpdate.length > 0) {
-            tasks.push(...packagesToUpdate.map(updatePackage));
+            for (const pkg of packagesToUpdate) {
+                if (!packagesToWrite.some(existing => existing.name === pkg.name)) {
+                    packagesToWrite.push(pkg);
+                }
+            }
         }
 
-        if (tasks.length > 0) {
-            await Promise.all(tasks);
+        if (packagesToWrite.length > 0) {
+            for (const pkg of packagesToWrite) {
+                await updatePackage(pkg);
+            }
             await installDependencies();
-            await runCommand('Running ESLint with auto-fix', await command.eslintFix());
+            // Avoid recursive setupPackages via buildCommand's default install path.
+            await runCommand('Running ESLint with auto-fix', await command.eslintFix({ setup: false }));
         }
 
         await options?.callback?.();

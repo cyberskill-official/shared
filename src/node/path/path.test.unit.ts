@@ -95,5 +95,24 @@ describe('command', () => {
             const result = await command.commitLint();
             expect(result).toContain('commitlint');
         });
+
+        it('should skip setupPackages when setup is false', async () => {
+            const { setupPackages } = await import('../package/index.js');
+            vi.mocked(setupPackages).mockClear();
+
+            const result = await command.typescriptCheck({ setup: false });
+
+            expect(result).toContain('tsc');
+            expect(setupPackages).not.toHaveBeenCalled();
+        });
+
+        it('should call setupPackages by default for CLI commands', async () => {
+            const { setupPackages } = await import('../package/index.js');
+            vi.mocked(setupPackages).mockClear();
+
+            await command.eslintCheck();
+
+            expect(setupPackages).toHaveBeenCalled();
+        });
     });
 });
