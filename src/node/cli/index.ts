@@ -8,9 +8,29 @@ import type { I_IssueEntry } from '../log/index.js';
 import { clearAllErrorLists, getStoredErrorLists, resolveCommands, runCommand } from '../command/index.js';
 import { addGitIgnoreEntry, pathExistsSync, readFileSync, removeSync, writeFileSync } from '../fs/index.js';
 import { catchError, E_IssueType, log } from '../log/index.js';
-import { getPackage, installDependencies } from '../package/index.js';
-import { AG_KIT_PACKAGE_NAME, command, createGitHooksConfig, CYBERSKILL_CLI, CYBERSKILL_PACKAGE_NAME, DOT_AGENT, PATH, resolve, SIMPLE_GIT_HOOK_JSON } from '../path/index.js';
+import { E_PackageType, getPackage, installDependencies, setupPackages } from '../package/index.js';
+import { AG_KIT_PACKAGE_NAME, command, createGitHooksConfig, CYBERSKILL_CLI, CYBERSKILL_PACKAGE_NAME, DOT_AGENT, ESLINT_PACKAGE_NAME, PATH, resolve, SIMPLE_GIT_HOOK_JSON, TSC_PACKAGE_NAME } from '../path/index.js';
 import { checkMongoMigrateGuard } from './cli.util.js';
+
+/**
+ * Resolves/installs lint tool dependencies once before read-only typecheck and ESLint runs.
+ * Avoids concurrent setupPackages writes that can blank versions in package.json.
+ */
+async function ensureLintToolPackages() {
+    await setupPackages(
+        [
+            {
+                name: TSC_PACKAGE_NAME,
+                type: E_PackageType.DEV_DEPENDENCY,
+            },
+            {
+                name: ESLINT_PACKAGE_NAME,
+                type: E_PackageType.DEV_DEPENDENCY,
+            },
+        ],
+        { install: true },
+    );
+}
 
 /**
  * Retrieves the version from the package.json file.
@@ -45,7 +65,7 @@ async function checkTypescript() {
         return;
     }
 
-    await runCommand('Performing TypeScript validation', await command.typescriptCheck());
+    await runCommand('Performing TypeScript validation', await command.typescriptCheck({ setup: false }));
 }
 
 /**
@@ -57,7 +77,9 @@ async function checkTypescript() {
  * @returns A promise that resolves when the ESLint check is complete.
  */
 async function checkEslint(fix = false) {
-    const commandToRun = fix ? await command.eslintFix() : await command.eslintCheck();
+    const commandToRun = fix
+        ? await command.eslintFix({ setup: false })
+        : await command.eslintCheck({ setup: false });
     const label = fix ? 'Running ESLint with auto-fix' : 'Running ESLint check';
 
     try {
@@ -160,29 +182,35 @@ async function inspectLint() {
 
 /**
  * Performs comprehensive linting checks including TypeScript and ESLint.
- * This function runs both TypeScript validation and ESLint checks in parallel,
- * then displays the combined results.
+ * Installs lint tool dependencies once serially, then runs TypeScript validation
+ * and ESLint as read-only checks in parallel.
  *
  * @returns A promise that resolves when all linting checks are complete.
  */
 async function lintCheck() {
     await clearAllErrorLists();
-    await checkTypescript();
-    await checkEslint();
+    await ensureLintToolPackages();
+    await Promise.all([
+        checkTypescript(),
+        checkEslint(),
+    ]);
     await showCheckResult();
 }
 
 /**
  * Performs comprehensive linting checks with automatic fixes.
- * This function runs both TypeScript validation and ESLint checks with auto-fix
- * in parallel, then displays the combined results.
+ * Installs lint tool dependencies once serially, then runs TypeScript validation
+ * and ESLint with auto-fix as read-only command resolution in parallel.
  *
  * @returns A promise that resolves when all linting checks with fixes are complete.
  */
 async function lintFix() {
     await clearAllErrorLists();
-    await checkTypescript();
-    await checkEslint(true);
+    await ensureLintToolPackages();
+    await Promise.all([
+        checkTypescript(),
+        checkEslint(true),
+    ]);
     await showCheckResult();
 }
 
