@@ -2,6 +2,15 @@
 name: 🚀 CI - Deploy
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "deploy (semantic-release latest) or publish-backport-2.19.2"
+        required: true
+        default: deploy
+        type: choice
+        options:
+          - deploy
+          - publish-backport-2.19.2
 concurrency:
   group: deploy
   cancel-in-progress: false
@@ -9,6 +18,7 @@ permissions: {}
 jobs:
   deploy:
     name: 🚀 Deploy
+    if: ${{ inputs.mode == 'deploy' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production
@@ -41,3 +51,39 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: pnpm exec semantic-release
+
+  publish-backport-2-19-2:
+    name: Publish 2.19.2 backport
+    if: ${{ inputs.mode == 'publish-backport-2.19.2' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24.12.0"
+          registry-url: https://registry.npmjs.org/
+
+      - name: Publish backport tarball
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -f .backport/cyberskill-shared-2.19.2.tgz
+          if npm view @cyberskill/shared@2.19.2 version >/dev/null 2>&1; then
+            echo "2.19.2 already published — skipping"
+            exit 0
+          fi
+          # Use same trusted Deploy workflow + OIDC provenance path as 3.x releases.
+          # Dist-tag must not be latest (3.24.1 is higher); exact version installs still work.
+          npm publish .backport/cyberskill-shared-2.19.2.tgz --access public --tag backport-2.19 --provenance
+          npm view @cyberskill/shared@2.19.2 version
