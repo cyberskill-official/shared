@@ -36,5 +36,5 @@ jobs:
             echo "2.19.2 already published — skipping"
             exit 0
           } || true
-          npm publish .backport/cyberskill-shared-2.19.2.tgz --access public
+          npm publish .backport/cyberskill-shared-2.19.2.tgz --access public --tag backport-2.19
           npm view @cyberskill/shared@2.19.2 version
